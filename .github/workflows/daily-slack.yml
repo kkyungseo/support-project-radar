@@ -27,6 +27,7 @@ jobs:
       - name: Run daily script
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # GitHub Secrets에서 Webhook URL 가져오기
+          PYTHONPATH: ${{ github.workspace }}/src  # src 디렉터리를 Python 경로에 추가
         run: |
           source .venv/bin/activate
           python scripts/daily.py --publish
