@@ -1,0 +1,32 @@
+name: Run Daily Script
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # 매일 오전 9시에 실행
+  workflow_dispatch: # 수동 실행 트리거
+
+jobs:
+  run-daily:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run daily script
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # GitHub Secrets에서 Webhook URL 가져오기
+        run: |
+          source .venv/bin/activate
+          python scripts/daily.py --publish

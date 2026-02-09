@@ -1,0 +1,112 @@
+version: 1
+timezone: "Asia/Seoul"
+
+defaults:
+  schedule:
+    cron: "0 9 * * *" 
+  http:
+    timeout_sec: 20
+    retries: 3
+    backoff_sec: 2
+    user_agent: "amously-grant-radar/0.1 (+contact: dev@amously.ai)"
+  rate_limit:
+    max_requests_per_min: 30
+
+sources:
+  # 1) K-Startup (data.go.kr OpenAPI)
+  - id: "kstartup"
+    name: "K-Startup OpenAPI (kisedKstartupService01)"
+    enabled: true
+    type: "api"
+    connector: "kstartup_api"
+
+    dataset:
+      portal_page: "https://www.data.go.kr/data/15125364/openapi.do"
+      active_period: "2026-02-09 ~ 2028-02-09"
+
+    api:
+      base_url: "${KSTARTUP_BASE_URL:https://apis.data.go.kr/B552735/kisedKstartupService01}"
+
+      endpoints:
+        announcements: "/getAnnouncementInformation01" # 지원사업 공고 정보
+        business: "/getBusinessInformation01"          # 통합공고 지원사업(사업소개) 정보
+        content: "/getContentInformation01"            # 창업관련 콘텐츠 정보
+        stats: "/getStatisticalInformation01"          # 창업관련 통계보고서 정보
+
+      enabled_endpoints:
+        - "announcements"
+        - "business"
+
+      default_params:
+        returnType: "${KSTARTUP_RETURN_TYPE:json}"  
+        page: 1
+        perPage: "${KSTARTUP_PER_PAGE:100}"
+
+      incremental:
+        strategy: "date_window"
+        lookback_days: "${KSTARTUP_LOOKBACK_DAYS:7}"
+        max_pages_per_run: "${KSTARTUP_MAX_PAGES_PER_RUN:30}"
+
+    auth:
+      # data.go.kr 키 전달 파라미터: ServiceKey
+      service_key_param: "ServiceKey"
+      service_key_env: "DATA_GO_KR_SERVICE_KEY"
+
+    rate_limit:
+      max_requests_per_min: 30
+
+  # 2) Knowhow (RSS)
+  - id: "knowhow"
+    name: "KNOWHOW RSS"
+    enabled: true
+    type: "rss"
+    connector: "knowhow_feed"
+
+    rss:
+      feed_url: "https://knowhow.ceo/feed"
+      use_conditional_get: true
+
+    schedule:
+      cron: "10 9 * * *" # K-Startup 다음에 실행
+
+    rate_limit:
+      max_requests_per_min: 60
+
+  # 3) SMTECH (공개영역만 / 기본 비활성화 권장)
+  - id: "smtech"
+    name: "SMTECH (public pages only)"
+    enabled: false
+    type: "scraping"
+    connector: "smtech_public"
+
+    web:
+      base_url: "https://www.smtech.go.kr"
+      allowed_paths:
+        - "/front/" 
+
+    schedule:
+      cron: "20 9 * * *"
+
+    http:
+      timeout_sec: 15
+      retries: 2
+      backoff_sec: 2
+
+    rate_limit:
+      max_requests_per_min: 15
+
+  # 4) Bizinfo (공개 사업공고 보강 소스)
+  - id: "bizinfo"
+    name: "bizinfo 사업공고"
+    enabled: true
+    type: "scraping"
+    connector: "bizinfo_public"
+
+    web:
+      base_url: "https://www.bizinfo.go.kr"
+
+    schedule:
+      cron: "30 9 * * *"
+
+    rate_limit:
+      max_requests_per_min: 30
