@@ -1,9 +1,9 @@
-name: Run Daily Script
+name: Daily - Slack
 
 on:
   schedule:
-    - cron: "0 9 * * *" # 매일 오전 9시에 실행
-  workflow_dispatch: # 수동 실행 트리거
+    - cron: "0 1 * * *"  # 매일 10:00 KST에 실행
+  workflow_dispatch:     # 수동 실행 허용
 
 jobs:
   run-daily:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
