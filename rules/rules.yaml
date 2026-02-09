@@ -15,18 +15,11 @@ policy:
     - tags_text          
 
   always_include_if_any:
-    - "지원사업"
-    - "지원 사업"
-    - "지원과제"
-    - "지원 과제"
-    - "공고"
-    - "모집"
     - "바우처"
     - "PoC"
     - "실증"
 
 # K-Startup 사업구분코드(biz_category_cd) 매핑 (getBusinessInformation01)
-# - 코드: cmrczn_tab1~9
 # - 설명: 사업화/창업교육/시설,공간,보육/멘토링,컨설팅/행사,네트워크/기술개발 R&D/융자/인력/글로벌
 kstartup_taxonomy:
   biz_category_cd_map:
@@ -93,7 +86,6 @@ must_match_any:
       - "창업기업"
       - "창업 기업"
       - "스타트업"
-      - "스타트 업"
       - "PoC"
       - "poc"
       - "실증"
@@ -112,11 +104,8 @@ must_match_any:
       - "스케일업"
       - "Scale-up"
       # K-Startup 사업구분 설명 텍스트
-      - "사업화"           # cmrczn_tab1
-      - "기술개발 R&D"     # cmrczn_tab6
-      - "융자"             # cmrczn_tab7
-      - "인력"             # cmrczn_tab8
-      - "글로벌"           # cmrczn_tab9
+      - "사업화"           
+      - "기술개발 R&D"    
 
   - group: "events_programs"
     any:
@@ -139,13 +128,11 @@ must_match_any:
       - "오리엔테이션"
       - "OT"
       # K-Startup 사업구분 설명 텍스트
-      - "창업교육"         # cmrczn_tab2
-      - "멘토링,컨설팅"    # cmrczn_tab4
-      - "행사,네트워크"    # cmrczn_tab5
+      - "창업교육"       
+      - "멘토링,컨설팅"    
+      - "행사,네트워크"    
 
-# ----
-# 2) Notion 기반 "관심 영역" = 태깅(categories)
-# ----
+# 2) Notion 기반 "관심 영역" 
 categories:
   - name: "오픈이노베이션/대기업연계"
     any:
@@ -234,9 +221,7 @@ categories:
       - "경남"
       - "제주"
 
-# ----
 # 3) 조합 검색(AND)
-# ----
 combo_queries:
   - name: "오픈이노베이션+스타트업"
     all: ["오픈이노베이션", "스타트업"]
@@ -253,24 +238,20 @@ combo_queries:
   - name: "K-Startup+글로벌"
     all: ["K-Startup", "글로벌"]
 
-# ----
-# 4) 제외(소음 제거) — 최소만
-# ----
+# 4) 제외
 exclude:
   any:
     - "채용"
-    - "구인"
     - "인턴"
-    - "정규직"
     - "입찰"
     - "용역"
     - "조달"
     - "납품"
     - "부동산 매매"
+    - "주관기관"
+    - "주관 기관"
 
-# ----
 # 5) 소스별 매칭 범위(특성 반영)
-# ----
 source_overrides:
   kstartup:
     # K-Startup은 API가 제공하는 본문성 필드(pbanc_ctnt, biz_supt_ctnt 등)가 있으니 content까지 매칭 허용
