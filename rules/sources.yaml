@@ -20,6 +20,9 @@ sources:
     type: "api"
     connector: "kstartup_api"
 
+    schedule:
+      cron: "0 9 * * *"  # 매일 9시 정각
+
     dataset:
       portal_page: "https://www.data.go.kr/data/15125364/openapi.do"
       active_period: "2026-02-09 ~ 2028-02-09"
@@ -96,9 +99,10 @@ sources:
       max_requests_per_min: 15
 
   # 4) Bizinfo (공개 사업공고 보강 소스)
+  # NOTE: bizinfo_public 커넥터가 아직 구현되지 않아 비활성화
   - id: "bizinfo"
     name: "bizinfo 사업공고"
-    enabled: true
+    enabled: false
     type: "scraping"
     connector: "bizinfo_public"
 

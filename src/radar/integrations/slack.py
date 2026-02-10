@@ -23,8 +23,9 @@ MAX_SLACK_ITEMS = 10  # Slack 블록 제한으로 최대 10개 항목만 전송
 def send_rich_message(
     items: List[Dict[str, Any]], 
     title: Optional[str] = None,
-    lookback_days: int = 7
+    lookback_days: int = 4
 ) -> None:
+    
     """
     Block Kit 스타일의 리치 메시지 전송
     
@@ -33,9 +34,10 @@ def send_rich_message(
         title: 메시지 제목 (선택)
         lookback_days: 조회 기간 (일)
     """
+
     webhook_url = os.getenv("SLACK_WEBHOOK_URL")
     if not webhook_url:
-        raise ValueError("SLACK_WEBHOOK_URL 환경 변수가 설정되지 않았습니다.")
+        raise ValueError("SLACK_WEBHOOK_URL 환경 변수가 설정되지 않았습니다. Slack App 설정과 GitHub Action 설정을 확인해주세요.")
 
     # 날짜 범위 계산
     today = datetime.now()
@@ -83,7 +85,7 @@ def send_rich_message(
             {"type": "divider"}
         ]
 
-        # 각 아이템에 대한 블록 생성 (제한된 수만)
+        # 각 아이템에 대한 블록 생성 (Slack 메시지 정책에 의해 제한된 수만 출력)
         for item in display_items:
             item_title = item.get("title") or "제목 없음"
             item_link = item.get("link") or item.get("url") or ""

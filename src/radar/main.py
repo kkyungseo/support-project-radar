@@ -223,7 +223,17 @@ def run_daily(publish: bool = True):
             logging.info(f"  -> kstartup: {len(items)}건 수집")
             raw_items.extend(items)
             
-        # smtech, bizinfo 등은 추후 구현
+        elif connector == "smtech_public":
+            # SMTECH 커넥터 (현재 비활성화 권장)
+            logging.warning(f"  -> smtech: 커넥터가 아직 완전히 구현되지 않았습니다. 건너뜁니다.")
+            
+        elif connector == "bizinfo_public":
+            # Bizinfo 커넥터 (미구현)
+            logging.warning(f"  -> bizinfo: 커넥터가 아직 구현되지 않았습니다. 건너뜁니다.")
+            
+        else:
+            # 알 수 없는 커넥터
+            logging.error(f"  -> 알 수 없는 커넥터입니다: {connector}. sources.yaml 설정을 확인하세요.")
 
     logging.info(f"Collected {len(raw_items)} raw items total")
 
