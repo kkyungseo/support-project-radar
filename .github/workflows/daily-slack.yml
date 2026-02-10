@@ -2,7 +2,7 @@ name: Daily - Slack
 
 on:
   schedule:
-    - cron: "0 1 * * *"  # 매일 10:00 KST에 실행
+    - cron: "0 1 * * *"  # 매일 10:00 KST에 실행 (UTC 01:00)
   workflow_dispatch:     # 수동 실행 허용
 
 jobs:
@@ -11,26 +11,20 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+          cache: "pip"
 
       - name: Install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run daily script
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # GitHub Secrets에서 Webhook URL 가져오기
-          PYTHONPATH: ${{ github.workspace }}/src  # src 디렉터리를 Python 경로에 추가
-        run: |
-          source .venv/bin/activate
-          python scripts/daily.py --publish
-
-      - name: Debug Python Path
-        run: echo $PYTHONPATH
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: python scripts/daily.py

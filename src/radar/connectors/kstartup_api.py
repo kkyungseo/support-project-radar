@@ -33,6 +33,26 @@ def _as_list(x: Any) -> List[Any]:
     return [x]
 
 
+def _resolve_env_placeholder(value: Any, default: Any = None) -> Any:
+    """
+    ${ENV_VAR:default_value} 형식의 플레이스홀더를 환경변수 값으로 치환합니다.
+    """
+    if not isinstance(value, str):
+        return value if value is not None else default
+    
+    if value.startswith("${") and value.endswith("}"):
+        inner = value[2:-1]  # ENV_VAR:default_value
+        if ":" in inner:
+            env_name, env_default = inner.split(":", 1)
+        else:
+            env_name, env_default = inner, ""
+        
+        resolved = os.getenv(env_name.strip(), env_default.strip())
+        return resolved if resolved else default
+    
+    return value if value else default
+
+
 def _pick_items_from_json(payload: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], Optional[int]]:
     """
     data.go.kr OpenAPI JSON 응답에서 item 목록을 최대한 유연하게 추출합니다.
@@ -42,9 +62,27 @@ def _pick_items_from_json(payload: Dict[str, Any]) -> Tuple[List[Dict[str, Any]]
       - items: list[dict]
       - total_count: Optional[int]
     """
+    # payload가 list인 경우 직접 반환
+    if isinstance(payload, list):
+        return payload, len(payload)
+    
     # 흔한 케이스 1) {"response": {"body": {"items": {"item": [...]}, "totalCount": N}}}
-    response = payload.get("response") or payload
-    body = response.get("body") or response.get("data") or response.get("result") or response
+    response = payload.get("response") if isinstance(payload, dict) else payload
+    if response is None:
+        response = payload
+    
+    # body 추출
+    if isinstance(response, dict):
+        body = response.get("body") or response.get("data") or response.get("result") or response
+    else:
+        body = response
+    
+    # body가 list인 경우 직접 반환
+    if isinstance(body, list):
+        return body, len(body)
+    
+    if not isinstance(body, dict):
+        return [], None
 
     total_count = None
     for k in ("totalCount", "total_count", "total"):
@@ -55,7 +93,7 @@ def _pick_items_from_json(payload: Dict[str, Any]) -> Tuple[List[Dict[str, Any]]
                 total_count = None
             break
 
-    items_container = body.get("items") or body.get("item") or body.get("itemsList") or body.get("list")
+    items_container = body.get("items") or body.get("item") or body.get("itemsList") or body.get("list") or body.get("data")
     if isinstance(items_container, dict) and "item" in items_container:
         items_container = items_container.get("item")
 
@@ -96,7 +134,7 @@ def fetch(
     """
     print("[kstartup] K-Startup OpenAPI 호출을 시작합니다.")
 
-    # ---- 설정 로드
+    # ---- 설정 로드 (환경변수 기본값)
     base_url = None
     endpoints: Dict[str, str] = {}
     enabled_endpoints: List[str] = []
@@ -110,16 +148,16 @@ def fetch(
 
     if source_cfg:
         api_cfg = source_cfg.get("api", {})
-        base_url = api_cfg.get("base_url") or source_cfg.get("endpoint")
+        base_url = _resolve_env_placeholder(api_cfg.get("base_url"), None) or source_cfg.get("endpoint")
         endpoints = api_cfg.get("endpoints", {}) or {}
         enabled_endpoints = api_cfg.get("enabled_endpoints", []) or []
 
         default_params = api_cfg.get("default_params", {}) or {}
-        return_type = str(default_params.get("returnType", return_type))
-        per_page = int(default_params.get("perPage", per_page))
+        return_type = str(_resolve_env_placeholder(default_params.get("returnType"), return_type))
+        per_page = int(_resolve_env_placeholder(default_params.get("perPage"), per_page))
 
         incremental = api_cfg.get("incremental", {}) or {}
-        max_pages = int(incremental.get("max_pages_per_run", max_pages))
+        max_pages = int(_resolve_env_placeholder(incremental.get("max_pages_per_run"), max_pages))
 
         auth_cfg = source_cfg.get("auth", {}) or {}
         service_key_env = auth_cfg.get("service_key_env", service_key_env)
@@ -259,13 +297,14 @@ def _map_kstartup_items(items: List[Dict[str, Any]], ep_name: str) -> List[Dict[
             or ""
         )
 
-        # published_at: 공고등록일 등이 있으면 사용, 없으면 현재시간(UTC)
+        # published_at: 접수시작일을 게시일로 사용 (API에 등록일 필드가 없음)
+        # 우선순위: 공고등록일 > 접수시작일 > 현재시간
         published_at = _safe_text(
             it.get("pbanc_reg_dt")
             or it.get("pbancRegDt")
             or it.get("reg_dt")
             or it.get("regDt")
-            or it.get("published_at")
+            or bg  # 접수 시작일을 대체로 사용
             or ""
         )
         if not published_at:

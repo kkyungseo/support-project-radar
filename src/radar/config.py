@@ -12,8 +12,13 @@ class Config:
         from dotenv import load_dotenv
         load_dotenv()
         return {
-            "SLACK_TOKEN": os.getenv("SLACK_TOKEN"),
-            "KSTARTUP_API_KEY": os.getenv("KSTARTUP_API_KEY"),
+            # Slack 설정
+            "SLACK_WEBHOOK_URL": os.getenv("SLACK_WEBHOOK_URL"),
+            "SLACK_BOT_TOKEN": os.getenv("SLACK_BOT_TOKEN"),
+            "SLACK_POST_CHANNEL_ID": os.getenv("SLACK_POST_CHANNEL_ID"),
+            # K-Startup API 설정
+            "DATA_GO_KR_SERVICE_KEY": os.getenv("DATA_GO_KR_SERVICE_KEY"),
+            "KSTARTUP_BASE_URL": os.getenv("KSTARTUP_BASE_URL"),
         }
 
     def load_yaml(self, path: str) -> Any:
@@ -21,7 +26,8 @@ class Config:
             return yaml.safe_load(file)
 
     def load_sources(self, path: str) -> Dict[str, Any]:
-        sources = self.load_yaml(path)
-        return {src["id"]: src for src in sources if src.get("enabled", False)}
+        data = self.load_yaml(path)
+        sources_list = data.get("sources", [])
+        return {src["id"]: src for src in sources_list if src.get("enabled", False)}
 
 config = Config()
