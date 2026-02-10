@@ -2,7 +2,7 @@ name: Daily - Slack
 
 on:
   schedule:
-    - cron: "0 1 * * *"  # 매일 10:00 KST에 실행 (UTC 01:00)
+    - cron: "45 0 * * *"  # 매일 9:45 KST에 실행 (UTC 00:45)
   workflow_dispatch:     # 수동 실행 허용
 
 jobs:
