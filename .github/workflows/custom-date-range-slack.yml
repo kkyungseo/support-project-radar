@@ -1,0 +1,45 @@
+name: Custom Date Range - Slack
+
+on:
+  workflow_dispatch:     # 수동 실행 전용
+    inputs:
+      lookback_days:
+        description: '며칠 전부터 조회할지 입력 (예: 7이면 7일 전부터 오늘까지)'
+        required: true
+        default: '7'
+        type: string
+      publish:
+        description: 'Slack으로 메시지 전송'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  run-custom-date-range:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily script with custom date range
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          LOOKBACK_DAYS: ${{ github.event.inputs.lookback_days }}
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          if [ "${{ github.event.inputs.publish }}" = "false" ]; then
+            python scripts/daily.py --no-publish
+          else
+            python scripts/daily.py
+          fi

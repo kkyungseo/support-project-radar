@@ -31,7 +31,10 @@ class Config:
         }
 
     def load_yaml(self, path: str) -> Any:
-        with open(path, "r", encoding="utf-8") as file:
+        # 프로젝트 루트 기준 절대 경로로 변환
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        full_path = os.path.join(base_dir, path)
+        with open(full_path, "r", encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     def load_sources(self, path: str) -> Dict[str, Any]:

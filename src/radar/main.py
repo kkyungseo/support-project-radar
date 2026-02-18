@@ -255,12 +255,25 @@ def run_daily(publish: bool = True):
     policy = rules.get("policy", {})
     always_include = policy.get("always_include_if_any", [])
     must_match_groups = rules.get("must_match_any", [])
+    exclude_rules = rules.get("exclude", {})
+    exclude_keywords = exclude_rules.get("any", [])
     
     for item in date_filtered_items:
         title = item.get("title", "")
         summary = item.get("summary", "")
         content = item.get("content", "")
         search_text = f"{title} {summary} {content}".lower()
+        
+        # 제외 키워드 체크 - 하나라도 포함되면 건너뛰기
+        should_exclude = False
+        for keyword in exclude_keywords:
+            if keyword.lower() in search_text:
+                logging.debug(f"항목 제외 (키워드: '{keyword}'): {title}")
+                should_exclude = True
+                break
+        
+        if should_exclude:
+            continue
         
         matched_keywords = []
         
